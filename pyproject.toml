@@ -16,7 +16,8 @@ dependencies = [
 cli = ["click", "tabulate"]
 
 [tool.setuptools.packages.find]
-where = ['taxometr']
+include = ['taxometr']
+exclude = ['config']
 
 
 [project.scripts]
