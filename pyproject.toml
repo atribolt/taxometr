@@ -15,10 +15,6 @@ dependencies = [
 [project.optional-dependencies]
 cli = ["click", "tabulate"]
 
-[tool.setuptools.packages.find]
-include = ['taxometr']
-exclude = ['config']
-
 
 [project.scripts]
 taxometr = "taxometr.cli:cli"
