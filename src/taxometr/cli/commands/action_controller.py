@@ -43,11 +43,13 @@ def action_list(show_all, since, until, time):
   for action in action_dao.get_actions_by_time(since, until):
     times = action_dao.get_action_timings(action, time_since)
 
+    today_time = sum(map(lambda x: x.total_time, times), timedelta())
+
     row = [
       action.id,
       action.task.title,
       action.description,
-      sum(map(lambda x: x.total_time, times), timedelta()),
+      '%s (%.2f)' % (today_time, today_time.total_seconds() / 60 / 60),
       action.id == active_action.id
     ]
     table.add_row(row)
@@ -81,9 +83,9 @@ def action_show(show_ranges, action_id):
   echo('  Id: {}', action.task.id)
   echo('  Title: {}', action.task.title)
   echo('Description: {}', action.description)
-  echo('All time: {}', all_time)
-  echo('This month time: {}', month_time)
-  echo('Today time: {}', today_time)
+  echo('All time: {} ({:.2f})', all_time, all_time.total_seconds() / 60 / 60)
+  echo('This month time: {} ({:.2f})', month_time, month_time.total_seconds() / 60 / 60)
+  echo('Today time: {} ({:.2f})', today_time, today_time.total_seconds() / 60 / 60)
 
   if show_ranges == 'month':
     filter_ranges = month_filter
@@ -93,7 +95,7 @@ def action_show(show_ranges, action_id):
     filter_ranges = lambda x: x
 
   echo('Time ranges:')
-  date_fmt = '%Y-%m-%d %H:%M:%S' if all_time else '%H:%M:%S'
+  date_fmt = '%Y-%m-%d %H:%M:%S %Z'
   for time in filter_ranges(timings):
     echo('  | {} | {:.2f}h | {} - {} ',
         time.total_time, time.total_time.seconds / 60 / 60,

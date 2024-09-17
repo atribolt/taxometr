@@ -16,12 +16,15 @@ def load_from_json(data: dict):
   log = logging.getLogger('configure')
 
   for section, (validator, confugrator) in CONFIG_SECTIONS.items():
-    log.debug('load %s', section)
+    log.debug('check config object "%s"', section)
     if section not in data:
-      log.warning('section "%s" not present in config, use default', section)
+      log.warning('section "%s" not present in config, load as default', section)
       confugrator(validator())
     else:
+      log.debug('loading config object "%s"', section)
       confugrator(validator.model_validate(data[section]))
+
+  log.info('config loaded')
 
 
 def load_from_file(config: Path = None):
@@ -40,23 +43,24 @@ def load_from_file(config: Path = None):
 def load():
   log = logging.getLogger('configure')
 
-  config_paths = [
-    './taxometr.json'
+  config_paths: list[Path] = [
+    Path('./taxometr.json')
   ]
 
   if sys.platform == 'linux':
     config_paths += [
-      '~/.config/taxometr/taxometr.json',
-      '/etc/taxometr.json'
+      Path('~/.config/taxometr/taxometr.json').expanduser(),
+      Path('/etc/taxometr.json')
     ]
   elif sys.platform == 'nt':
     config_paths += [
-      '~/AppData/Local/taxometr/taxometr.json',
+      Path('~/AppData/Local/taxometr/taxometr.json').expanduser(),
     ]
 
-  for config in map(Path, config_paths):
+  for config in config_paths:
     log.debug('test config %s', config)
     if config.exists():
+      log.debug('load config %s', config)
       load_from_file(config)
       return
   else:
