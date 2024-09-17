@@ -15,6 +15,9 @@ dependencies = [
 [project.optional-dependencies]
 cli = ["click", "tabulate"]
 
+[tool.setuptools.packages.find]
+where = ['taxometr']
+
 
 [project.scripts]
 taxometr = "taxometr.cli:cli"
