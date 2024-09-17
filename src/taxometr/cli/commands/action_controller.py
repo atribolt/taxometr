@@ -1,4 +1,5 @@
 import click
+import time
 from functools import partial
 from taxometr.cli.commands import Date
 from datetime import datetime, timedelta, timezone as tz
@@ -8,6 +9,12 @@ from taxometr.dao import Action, Task
 
 
 TIME_GROUP = click.Choice(['today', 'month', 'all'], case_sensitive=False)
+
+
+def get_midnight_time() -> datetime:
+  dt = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+  dt += timedelta(seconds=time.timezone)
+  return dt.replace(tzinfo=tz.utc)
 
 
 @click.group()
@@ -28,18 +35,18 @@ def action_list(show_all, since, until, time):
   if show_all:
     since = until = None
   elif since is None:
-    since = datetime.now(tz.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    since = get_midnight_time()
 
   if time == 'all':
     time_since = None
   elif time == 'month':
-    time_since = datetime.now(tz.utc).replace(month=1, hour=0, minute=0, second=0, microsecond=0)
+    time_since = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
   else:
-    time_since = datetime.now(tz.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    time_since = get_midnight_time()
 
   active_action = action_dao.get_active_action() or Action()
 
-  table = Table('id', 'task', 'action', 'total time', 'active')
+  table = Table('id', 'task', 'action', 'total time (%s)' % time, 'active')
   for action in action_dao.get_actions_by_time(since, until):
     times = action_dao.get_action_timings(action, time_since)
 
@@ -65,8 +72,8 @@ def action_show(show_ranges, action_id):
 
   action_dao = DaoFactory().get_action_dao()
 
-  today = datetime.now(tz.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-  month = datetime.now(tz.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+  today = get_midnight_time()
+  month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=tz.utc)
 
   today_filter = partial(filter, lambda x: x.begin >= today)
   month_filter = partial(filter, lambda x: x.begin >= month)
