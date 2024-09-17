@@ -24,8 +24,10 @@ def load_from_json(data: dict):
       confugrator(validator.model_validate(data[section]))
 
 
-def load_from_file(config: Path):
+def load_from_file(config: Path = None):
   log = logging.getLogger('configure')
+  if config is None:
+    return load()
 
   log.info('load config from %s', config)
 

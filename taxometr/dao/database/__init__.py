@@ -11,5 +11,5 @@ TABLES = [
 
 
 def get_connection():
-  from .configure import DatabaseType, ConnectionUrl
-  return DatabaseType(ConnectionUrl)
+  from .configure import DatabaseType, ConnectionArgs, ConnectionKwargs
+  return DatabaseType(*ConnectionArgs, **ConnectionKwargs)

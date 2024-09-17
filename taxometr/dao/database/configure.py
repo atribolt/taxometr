@@ -1,21 +1,27 @@
 from peewee import Database
-from pydantic import BaseModel, AnyUrl
+from pydantic import BaseModel
 
 
-ConnectionUrl: str
+ConnectionArgs: list
+ConnectionKwargs: dict
+
 DatabaseType: Database
 GlobalConnection: Database
 
 
 class DatabaseConfig(BaseModel):
   type: str = 'sqlite'
-  url: AnyUrl = './taxometr.db'
+  dbname: str = './taxometr.db'
+  host: str = 'sqlite'
+  port: int = 5432
+  user: str = 'postgres'
+  password: str = 'postgres'
 
 
 def create_tables():
   from taxometr.dao.database import TABLES
 
-  db: Database = DatabaseType(ConnectionUrl)
+  db: Database = DatabaseType(*ConnectionArgs, **ConnectionKwargs)
   with db.bind_ctx(TABLES):
     for table in TABLES:
       if not table.table_exists():
@@ -23,22 +29,43 @@ def create_tables():
 
 
 def load(config: DatabaseConfig):
-  global DatabaseType, ConnectionUrl, GlobalConnection
+  global GlobalConnection
 
-  from peewee import SqliteDatabase, PostgresqlDatabase
   types = {
-    'sqlite': SqliteDatabase,
-    'postgre': PostgresqlDatabase
+    'sqlite': load_sqlite,
+    'postgre': load_postgres
   }
 
   if config.type not in types:
     raise ValueError('invalid database type %s, allow %s' % (config.type, types.keys()))
 
-  DatabaseType = types[config.type]
-  ConnectionUrl = config.url
-
+  types[config.type](config)
   create_tables()
 
   from taxometr.dao.database import TABLES
-  GlobalConnection = DatabaseType(ConnectionUrl)
+  GlobalConnection = DatabaseType(ConnectionArgs)
   GlobalConnection.bind(TABLES)
+
+
+def load_sqlite(config: DatabaseConfig):
+  global DatabaseType, ConnectionArgs, ConnectionKwargs
+  from peewee import SqliteDatabase
+
+  DatabaseType = SqliteDatabase
+  ConnectionArgs = [str(config.dbname)]
+  ConnectionKwargs = {}
+
+
+def load_postgres(config: DatabaseConfig):
+  global DatabaseType, ConnectionArgs, ConnectionKwargs
+  from peewee import PostgresqlDatabase
+
+  DatabaseType = PostgresqlDatabase
+  ConnectionArgs = [str(config.dbname)]
+  ConnectionKwargs = dict(
+    user=config.user,
+    password=config.password,
+    host=config.host,
+    port=config.port,
+    dbname=config.dbname
+  )

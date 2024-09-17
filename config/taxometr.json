@@ -1,0 +1,13 @@
+{
+  "data": {
+    "backend": "database",
+    "properties": {
+      "type": "sqlite",
+      "dbname": "./taxometr.db",
+      "host": "localhost",
+      "port": 5432,
+      "user": "postgres",
+      "password": "postgres"
+    }
+  }
+}
