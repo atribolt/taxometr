@@ -26,8 +26,8 @@ def action_group():
 @click.option('-a', '--all', 'show_all', is_flag=True, default=False, help='Show all actions')
 @click.option('-s', '--since', type=Date, help='Show actions after')
 @click.option('-u', '--until', type=Date, help='Show actions before')
-@click.option('-t', '--time', type=TIME_GROUP, default='today', help='Sum time for the period')
-def action_list(show_all, since, until, time):
+@click.option('-t', '--time', 'time_range', type=TIME_GROUP, default='today', help='Sum time for the period')
+def action_list(show_all, since, until, time_range):
   """Show action list (default show today actions)"""
 
   action_dao = DaoFactory().get_action_dao()
@@ -37,17 +37,19 @@ def action_list(show_all, since, until, time):
   elif since is None:
     since = get_midnight_time()
 
-  if time == 'all':
+  if time_range == 'all':
     time_since = None
-  elif time == 'month':
+  elif time_range == 'month':
     time_since = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
   else:
     time_since = get_midnight_time()
 
   active_action = action_dao.get_active_action() or Action()
 
-  table = Table('id', 'task', 'action', 'total time (%s)' % time, 'active')
-  for action in action_dao.get_actions_by_time(since, until):
+  table = Table('id', 'task', 'action', 'total time (%s)' % time_range, 'active')
+
+  actions = action_dao.get_actions() if show_all else action_dao.get_actions_by_time(since, until)
+  for action in actions:
     times = action_dao.get_action_timings(action, time_since)
 
     today_time = sum(map(lambda x: x.total_time, times), timedelta())
@@ -103,10 +105,10 @@ def action_show(show_ranges, action_id):
 
   echo('Time ranges:')
   date_fmt = '%Y-%m-%d %H:%M:%S %Z'
-  for time in filter_ranges(timings):
+  for time_range in filter_ranges(timings):
     echo('  | {} | {:.2f}h | {} - {} ',
-        time.total_time, time.total_time.seconds / 60 / 60,
-        time.begin.strftime(date_fmt), time.end.strftime(date_fmt) if time.end else '...')
+        time_range.total_time, time_range.total_time.seconds / 60 / 60,
+        time_range.begin.strftime(date_fmt), time_range.end.strftime(date_fmt) if time_range.end else '...')
 
 
 @action_group.command('new')
