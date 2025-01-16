@@ -9,5 +9,12 @@
       "user": "postgres",
       "password": "postgres"
     }
+  },
+  "rounding": {
+    "roundSeconds": true,
+    "roundMinutes": {
+      "enabled": true,
+      "threshold": 5
+    }
   }
 }

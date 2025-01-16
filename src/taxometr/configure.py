@@ -5,10 +5,14 @@ from pathlib import Path
 from taxometr.dao.configure import (
   DaoConfigure, load as dao_configure
 )
+from taxometr.timings.configure import (
+  RoundingConfig, load as rounding_configure
+)
 
 
 CONFIG_SECTIONS = {
-  'data': (DaoConfigure, dao_configure)
+  'data': (DaoConfigure, dao_configure),
+  'rounding': (RoundingConfig, rounding_configure)
 }
 
 
