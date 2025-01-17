@@ -1,2 +1,6 @@
-from .converters import BaseConverter, SecondsReounding, MinuteDecimalRounding
-from .converter import Converter
+from .converters import (
+  BaseConverter,
+  SecondsReounding,
+  MinuteDecimalRounding,
+  Converter
+)

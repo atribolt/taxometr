@@ -9,7 +9,7 @@ class RoundMinutesConfig(BaseModel):
 
 class RoundingConfig(BaseModel):
   roundSeconds: bool = True
-  roundMinutes: RoundMinutesConfig
+  roundMinutes: RoundMinutesConfig = RoundMinutesConfig()
 
 
 def load(config: RoundingConfig):

@@ -1,6 +1,21 @@
 from datetime import datetime, timedelta
 
 
+class Converter:
+  _converters: list['BaseConverter'] = []
+
+  @staticmethod
+  def convert(dt: datetime) -> datetime:
+    """Apply converters to datetime"""
+    for converter in Converter._converters:
+      dt = converter.apply(dt)
+    return dt
+
+  @staticmethod
+  def add_converter(converter: 'BaseConverter'):
+    Converter._converters.append(converter)
+
+
 class BaseConverter:
   def apply(self, dt: datetime) -> datetime:
     """Convert datetime"""
