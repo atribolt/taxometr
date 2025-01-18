@@ -24,6 +24,20 @@ paths:
                 type: string
                 description: 'Шаблон названия задачи'
                 example: 'сервис'
+        - name: count
+          description: 'Ограничить кол-во задач'
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1000
+        - name: offset
+          description: 'Пропустить первые offset задач'
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         200:
           description: Ok
@@ -50,7 +64,7 @@ paths:
                   description: 'Название задачи'
                   example: 'Запуск человека на луну'
       responses:
-        200:
+        201:
           description: Ok
           content:
             application/json:
@@ -58,7 +72,12 @@ paths:
                 type: integer
                 minimum: 0
                 description: 'ID новоиспеченной задачи'
-
+        400:
+          description: 'Некорректный запрос'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
   /task/{id}:
     post:
       tags:
@@ -91,33 +110,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/error'
-        404:
-          description: 'Задача не найдена'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error'
-        5XX:
-          description: 'Внутренняя ошибка'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error'
-
-    get:
-      tags:
-        - task
-        - get
-      summary: 'Получить информацию по задаче'
-      parameters:
-        - $ref: '#/components/parameters/path_identifier'
-      responses:
-        200:
-          description: 'Задача обновлена'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/task'
         404:
           description: 'Задача не найдена'
           content:

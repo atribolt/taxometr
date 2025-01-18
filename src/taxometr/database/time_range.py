@@ -1,8 +1,19 @@
 import time
 from peewee import Model, BigAutoField, ForeignKeyField, TimestampField
 from playhouse.shortcuts import ThreadSafeDatabaseMetadata
-from taxometr.dao.database import ActionDB
-from datetime import timezone as tz, timedelta
+from taxometr.database import ActionDB
+from datetime import timezone as tz, timedelta, datetime
+
+
+class TimeRange:
+  id: int
+  begin: datetime
+  end: datetime
+
+  @property
+  def total_time(self):
+    end = self.end or datetime.now(tz.utc).replace(microsecond=0)
+    return end - self.begin
 
 
 def to_local_time(tm):

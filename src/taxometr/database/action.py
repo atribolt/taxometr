@@ -2,13 +2,16 @@ from datetime import datetime, timezone as tz
 from typing import Iterable, Optional
 from peewee import Model, BigAutoField, ForeignKeyField, TextField
 from playhouse.shortcuts import ThreadSafeDatabaseMetadata
-
-from taxometr.dao.action import TimeRange
-from taxometr.dao.database import TaskDB
-from taxometr.dao import BaseActionDAO, Action, Task
+from taxometr.database import TaskDB, Task, TimeRange
 
 
-class ActionDB(Model, BaseActionDAO):
+class Action:
+  id: int = None
+  task: Task = None
+  description: str = None
+
+
+class ActionDB(Model):
   class Meta(ThreadSafeDatabaseMetadata):
     table_name = 'action'
 
@@ -44,7 +47,7 @@ class ActionDB(Model, BaseActionDAO):
     return map(dbrow_to_action, query)
 
   def get_actions_by_time(self, since: Optional[datetime], until: Optional[datetime]) -> Iterable[Action]:
-    from taxometr.dao.database import TimeRangeDB
+    from taxometr.database import TimeRangeDB
 
     query = ActionDB.select().join(TaskDB).switch(ActionDB).join(TimeRangeDB)
     if since:
@@ -55,7 +58,7 @@ class ActionDB(Model, BaseActionDAO):
     return map(dbrow_to_action, query)
 
   def get_active_action(self) -> Action | None:
-    from taxometr.dao.database import TimeRangeDB
+    from taxometr.database import TimeRangeDB
 
     query = ActionDB.select().join(TaskDB).switch(ActionDB).join(TimeRangeDB).where(TimeRangeDB.end_utc.is_null())
     result = query.get_or_none()
@@ -64,16 +67,16 @@ class ActionDB(Model, BaseActionDAO):
     return dbrow_to_action(result)
 
   def stop_all_actions(self):
-    from taxometr.dao.database import TimeRangeDB
+    from taxometr.database import TimeRangeDB
     TimeRangeDB.update(end_utc=datetime.now(tz.utc)).where(TimeRangeDB.end_utc.is_null()).execute()
 
   def start_action(self, action_id: int) -> bool:
-    from taxometr.dao.database import TimeRangeDB
+    from taxometr.database import TimeRangeDB
     _, created = TimeRangeDB.get_or_create(action_id=action_id, end_utc=None)
     return created
 
   def get_action_timings(self, action: Action, since: datetime = None, until: datetime = None) -> Iterable[TimeRange]:
-    from taxometr.dao.database import TimeRangeDB
+    from taxometr.database import TimeRangeDB
     query = TimeRangeDB.select().where(TimeRangeDB.action == action.id)
     if since:
       query = query.where(TimeRangeDB.begin_utc >= since)
