@@ -322,13 +322,29 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/columns'
-              # TODO добавить выбор сортировки по столбцу
+              sort:
+                $ref: '#/components/schemas/columns'
       responses:
         200:
           description: Ok
-
-        # TODO добавить коды возвратов 400, 5ХХ
-
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/action_info'
+        400:
+          description: 'Некорректный запрос'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        5XX:
+          description: 'Внутренняя ошибка'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
 
 components:
   parameters:
@@ -409,11 +425,14 @@ components:
       type: string
       description: 'Колонки для вывода отчетов'
       enum:
+        - task_id
         - task_name
+        - action_id
         - action_name
-        - time
-        - state
-        - time_hours    # Затраченное время в часах (2ч 30м -> 2.5)
+        - time                # Затраченное время в обычном формате (2ч 30м)
+        - state               # Состояние пункта
+        - action_time_ranges  # Временные интервалы
+        - time_hours          # Затраченное время в часах (2ч 30м -> 2.5)
 
     error:
       type: object
