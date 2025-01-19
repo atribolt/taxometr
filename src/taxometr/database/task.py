@@ -7,6 +7,9 @@ class Task:
   id: int
   title: str
 
+  def __str__(self):
+    return 'Task({}, {})'.format(self.id, self.title)
+
 
 class TaskDB(Model):
   class Meta(ThreadSafeDatabaseMetadata):
@@ -31,7 +34,7 @@ class TaskDB(Model):
   def get_task(task_id: int) -> Task:
     result = TaskDB.get_or_none(task_id)
     if result is None:
-      raise ValueError('task with id #{} is not exists'.format(task_id))
+      raise RuntimeError('task with id #{} is not exists'.format(task_id))
     return tdb_to_task(TaskDB.get())
 
   @staticmethod
@@ -64,13 +67,13 @@ class TaskDB(Model):
     instance.save()
 
   @staticmethod
-  def delete_task(task_id: int):
-    if task_id is None or task_id < 0:
-      raise ValueError('task id or task title is empty')
+  def delete_task(task: Task):
+    if task.id is None or task.id < 0:
+      raise ValueError('task id invalid')
 
-    instance: TaskDB = TaskDB.get_or_none(task_id)
+    instance: TaskDB = TaskDB.get_or_none(task.id)
     if instance is None:
-      raise ValueError('task with id #{} is not exists'.format(task_id))
+      raise ValueError('task with id #{} is not exists'.format(task.id))
 
     instance.delete_instance(recursive=True)
 

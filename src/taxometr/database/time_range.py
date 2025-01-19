@@ -1,7 +1,7 @@
 import time
 from peewee import Model, BigAutoField, ForeignKeyField, TimestampField
 from playhouse.shortcuts import ThreadSafeDatabaseMetadata
-from taxometr.database import ActionDB
+from taxometr.database.action import ActionDB
 from datetime import timezone as tz, timedelta, datetime
 
 
@@ -37,3 +37,12 @@ class TimeRangeDB(Model):
 
   def end(self):
     return to_local_time(self.end_utc) if self.end_utc else None
+
+
+
+def dbrow_to_time_range(time_range_row):
+  time_range = TimeRange()
+  time_range.id = time_range_row.id
+  time_range.begin = time_range_row.begin()
+  time_range.end = time_range_row.end()
+  return time_range

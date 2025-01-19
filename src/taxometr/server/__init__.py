@@ -1,6 +1,5 @@
 from flask import Flask, request_started, request, request_finished, g
-from taxometr.server.routes import task
-from pathlib import Path
+from taxometr.server.routes import task, actions
 
 
 def put_trace_hash(*_, **__):
@@ -43,7 +42,12 @@ def create_app():
 
   server.get('/task')(task.get_task_list)
   server.put('/task')(task.new_task)
-  server.post('/task/<task_id>')(task.update_task)
-  server.delete('/task/<task_id>')(task.delete_task)
+  server.post('/task/<int:task_id>')(task.update_task)
+  server.delete('/task/<int:task_id>')(task.delete_task)
+
+  server.put('/task/<int:task_id>/action')(actions.new_task_action)
+  server.get('/task/<int:task_id>/action')(actions.get_task_actions)
+  server.delete('/action/<int:action_id>')(actions.delete_action)
+  server.post('/action/<int:action_id>')(actions.update_action)
 
   return server

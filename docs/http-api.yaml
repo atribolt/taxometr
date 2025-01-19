@@ -159,14 +159,10 @@ paths:
           schema:
             type: object
             properties:
-              title:
+              name:
                 type: string
                 description: 'Шаблон названия пункта'
                 example: 'посадка'
-              since:
-                $ref: '#/components/schemas/datetime_field'
-              until:
-                $ref: '#/components/schemas/datetime_field'
       responses:
         200:
           description: Ok
@@ -208,9 +204,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/action_info'
+                $ref: '#/components/schemas/action_info'
         404:
           description: 'Задача не найдена'
           content:
@@ -245,9 +239,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/action_info'
+                $ref: '#/components/schemas/action_info'
         400:
           description: 'Некорректный запрос'
           content:

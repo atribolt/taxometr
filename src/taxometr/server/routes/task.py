@@ -2,16 +2,7 @@ import logging
 import flask
 import taxometr.server.errors as err
 from taxometr.database import TaskDB, Task
-from functools import wraps
-
-
-def logger_required(func):
-  @wraps(func)
-  def wrapper(*args, **kwargs):
-    logger = getattr(flask.app, 'logger', logging.getLogger(func.__name__))
-    return func(logger, *args, **kwargs)
-
-  return wrapper
+from taxometr.server.routes import logger_required
 
 
 def get_task_list():
@@ -74,8 +65,11 @@ def update_task(logger: logging.Logger, task_id: int):
 
 @logger_required
 def delete_task(logger: logging.Logger, task_id: int):
-  TaskDB.delete_task(task_id)
-  logger.info('task deleted: %s', task_id)
+  if not task_id or task_id < 0:
+    logger.error('invalid task ID "%i"', task_id)
+    return err.InvalidIdentifier('Required valid task identifier')
 
+  task = TaskDB.get_task(task_id)
+  TaskDB.delete_task(task)
 
-# TODO добавить обработку запросов создания пунктов задачи
+  logger.info('%s deleted', task)

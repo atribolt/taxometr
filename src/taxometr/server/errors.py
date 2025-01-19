@@ -14,4 +14,6 @@ class Error(Response):
 
 
 InvalidTitle = partial(Error, code=1000, status=400)
-InvalidIdentifier = partial(Response, code=1001, status=400)
+InvalidIdentifier = partial(Error, code=1001, status=400)
+InvalidActionName = partial(Error, code=1002, status=400)
+InvalidDatetimeValue = partial(Error, code=1003, status=400)
