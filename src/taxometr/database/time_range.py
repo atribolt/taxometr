@@ -5,17 +5,6 @@ from taxometr.database.action import ActionDB
 from datetime import timezone as tz, timedelta, datetime
 
 
-class TimeRange:
-  id: int
-  begin: datetime
-  end: datetime
-
-  @property
-  def total_time(self):
-    end = self.end or datetime.now(tz.utc).replace(microsecond=0)
-    return end - self.begin
-
-
 def to_local_time(tm):
   offset = timedelta(seconds=-time.timezone)
   tzname = time.tzname[0] if time.tzname else None
@@ -32,17 +21,12 @@ class TimeRangeDB(Model):
   begin_utc = TimestampField(utc=True, resolution=1)
   end_utc = TimestampField(null=True, resolution=1)
 
-  def begin(self):
+  def begin(self) -> datetime:
     return to_local_time(self.begin_utc)
 
-  def end(self):
+  def end(self) -> datetime | None:
     return to_local_time(self.end_utc) if self.end_utc else None
 
-
-
-def dbrow_to_time_range(time_range_row):
-  time_range = TimeRange()
-  time_range.id = time_range_row.id
-  time_range.begin = time_range_row.begin()
-  time_range.end = time_range_row.end()
-  return time_range
+  def total_time(self) -> timedelta:
+    end = self.end_utc or datetime.now()
+    return end - self.begin()

@@ -69,9 +69,7 @@ paths:
           content:
             application/json:
               schema:
-                type: integer
-                minimum: 0
-                description: 'ID новоиспеченной задачи'
+                $ref: '#/components/schemas/task'
         400:
           description: 'Некорректный запрос'
           content:
@@ -296,18 +294,6 @@ paths:
             properties:
               time_range:
                 $ref: '#/components/schemas/time_range'
-        - name: 'format'
-          in: query
-          description: 'Формат вывода'
-          schema:
-            type: object
-            properties:
-              columns:
-                type: array
-                items:
-                  $ref: '#/components/schemas/columns'
-              sort:
-                $ref: '#/components/schemas/columns'
       responses:
         200:
           description: Ok
@@ -316,7 +302,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/action_info'
+                  $ref: '#/components/schemas/report_record'
         400:
           description: 'Некорректный запрос'
           content:
@@ -346,8 +332,13 @@ components:
     datetime_field:
       type: string
       description: 'Время'
-      format: ISO8601
-      example: '2024-01-01T12:00:00.000+03:00'
+      format: date-time
+
+    optional_datetime_field:
+      type: string
+      description: "Время, которое может быть неопределено"
+      nullable: true
+      format: date-time
 
     task:
       type: object
@@ -396,7 +387,7 @@ components:
           type: integer
           description: 'ID пункта'
           minimum: 0
-        taskId:
+        task_id:
           type: integer
           description: 'ID задачи'
           minimum: 0
@@ -405,15 +396,15 @@ components:
           description: 'Название пункта'
           example: 'Сборка шаттла'
 
-    columns:
+    report_data:
       type: string
-      description: 'Колонки для вывода отчетов'
+      description: 'Данные для отправки в отчете'
       enum:
         - task_id
         - task_name
         - action_id
         - action_name
-        - time                # Затраченное время в обычном формате (2ч 30м)
+        - time_seconds        # Затраченное время в обычном формате (2ч 30м)
         - state               # Состояние пункта
         - action_time_ranges  # Временные интервалы
         - time_hours          # Затраченное время в часах (2ч 30м -> 2.5)
@@ -424,9 +415,42 @@ components:
       properties:
         code:
           type: integer
-          description: 'Код ошибки (возможно они будут)'
+          description: "Код ошибки (возможно они будут)"
           example: 0xEBA
         message:
           type: string
-          description: 'Описание ошибки'
-          example: 'Произошла неведомая дичь'
+          description: "Описание ошибки"
+          example: "Произошла неведомая дичь"
+
+    report_record:
+      type: object
+      description: "Строка отчета"
+      properties:
+        task_id:
+          type: integer
+        task_name:
+          type: string
+        action_id:
+          type: integer
+        action_name:
+          type: string
+        time_seconds:
+          type: integer
+          description: Время затраченное на пункт за период указанный в фильтре в секундах
+          example: 3600
+        state:
+          type: string
+          description: "Состояние задачи"
+          enum:
+            - active
+            - pause
+        action_time_ranges:
+          type: array
+          description: "Временные интервалы задачи"
+          items:
+            type: object
+            properties:
+              start:
+                $ref: "#/components/schemas/datetime_field"
+              end:
+                $ref: "#/components/schemas/optional_datetime_field"

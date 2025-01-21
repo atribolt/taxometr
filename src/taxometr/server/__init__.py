@@ -1,5 +1,6 @@
+import os
 from flask import Flask, request_started, request, request_finished, g
-from taxometr.server.routes import task, actions
+from taxometr.server.routes import task, actions, reports
 
 
 def put_trace_hash(*_, **__):
@@ -32,9 +33,26 @@ def close_database(sender, **__):
 
 
 def create_app():
-  server = Flask('AcquiringService',
+  server = Flask('taxometr',
                  static_url_path='/',
                  static_folder='public')
+
+  log = server.logger
+
+  if config := os.environ.get('TAXOMETR_CONFIG'):
+    log.debug('TAXOMETR_CONFIG is present: %s', config)
+    if os.path.exists(config):
+      log.debug('load config: %s', config)
+
+      import taxometr.configure as cfg
+      from pathlib import Path
+
+      cfg.load_from_file(Path(config))
+    else:
+      log.warning('config %s is not exists', config)
+  if 'TAXOMETR_DEBUG' in os.environ:
+    from taxometr.log import init_debug_logging
+    init_debug_logging()
 
   request_started.connect(put_trace_hash, server)
   request_started.connect(bind_database, server)
@@ -49,5 +67,6 @@ def create_app():
   server.get('/task/<int:task_id>/action')(actions.get_task_actions)
   server.delete('/action/<int:action_id>')(actions.delete_action)
   server.post('/action/<int:action_id>')(actions.update_action)
+  server.get('/timings/report')(reports.get_timing_report)
 
   return server

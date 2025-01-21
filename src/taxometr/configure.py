@@ -12,7 +12,7 @@ from taxometr.timings.configure import (
 
 
 CONFIG_SECTIONS = {
-  'data': (DatabaseConfig, database_configure),
+  'database': (DatabaseConfig, database_configure),
   'rounding': (RoundingConfig, rounding_configure)
 }
 

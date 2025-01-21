@@ -3,14 +3,6 @@ from peewee import Model, BigAutoField, TextField
 from playhouse.shortcuts import ThreadSafeDatabaseMetadata
 
 
-class Task:
-  id: int
-  title: str
-
-  def __str__(self):
-    return 'Task({}, {})'.format(self.id, self.title)
-
-
 class TaskDB(Model):
   class Meta(ThreadSafeDatabaseMetadata):
     table_name = 'task'
@@ -18,8 +10,11 @@ class TaskDB(Model):
   id = BigAutoField()
   title = TextField()
 
+  def __str__(self):
+    return 'Task({}, {})'.format(self.id, self.title)
+
   @staticmethod
-  def new(task: Task) -> Task:
+  def new(task: 'TaskDB') -> 'TaskDB':
     result, created = TaskDB.get_or_create(
       title=task.title
     )
@@ -31,16 +26,16 @@ class TaskDB(Model):
     return task
 
   @staticmethod
-  def get_task(task_id: int) -> Task:
+  def get_task(task_id: int) -> 'TaskDB':
     result = TaskDB.get_or_none(task_id)
     if result is None:
       raise RuntimeError('task with id #{} is not exists'.format(task_id))
-    return tdb_to_task(TaskDB.get())
+    return result
 
   @staticmethod
   def get_tasks(task_title: str = None,
                 offset: int = 0,
-                count: int = 0) -> Iterable[Task]:
+                count: int = 0) -> Iterable['TaskDB']:
     query = TaskDB.select()
 
     if task_title:
@@ -52,10 +47,10 @@ class TaskDB(Model):
     if count:
       query = query.limit(count)
 
-    return map(tdb_to_task, query)
+    return query
 
   @staticmethod
-  def update_task(task: Task):
+  def update_task(task: 'TaskDB'):
     if task.id is None or task.id < 0 or not task.title:
       raise ValueError('task id or task title is empty')
 
@@ -63,11 +58,12 @@ class TaskDB(Model):
     if instance is None:
       raise ValueError('task with id #{} is not exists'.format(task.id))
 
-    instance.title = task.title
-    instance.save()
+    if task.title != instance.title:
+      instance.title = task.title
+      instance.save()
 
   @staticmethod
-  def delete_task(task: Task):
+  def delete_task(task: 'TaskDB'):
     if task.id is None or task.id < 0:
       raise ValueError('task id invalid')
 
@@ -76,10 +72,3 @@ class TaskDB(Model):
       raise ValueError('task with id #{} is not exists'.format(task.id))
 
     instance.delete_instance(recursive=True)
-
-
-def tdb_to_task(result: TaskDB):
-  task = Task()
-  task.id = result.id
-  task.title = result.title
-  return task

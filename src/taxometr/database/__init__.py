@@ -1,6 +1,6 @@
-from .time_range import TimeRange, TimeRangeDB
-from .task import Task, TaskDB
-from .action import Action, ActionDB
+from .time_range import TimeRangeDB
+from .task import TaskDB
+from .action import ActionDB
 
 
 TABLES = [

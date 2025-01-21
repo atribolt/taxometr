@@ -15,7 +15,7 @@ def init_debug_logging():
       },
       'filters': {
         'hashfilter': {
-          '()': 'taxometr.logger.HashFilter'
+          '()': 'taxometr.log.HashFilter'
         }
       },
       'handlers': {

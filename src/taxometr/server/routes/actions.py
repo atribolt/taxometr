@@ -2,7 +2,7 @@ import copy
 import logging
 import flask
 import taxometr.server.errors as err
-from taxometr.database import TaskDB, Task, Action, ActionDB
+from taxometr.database import TaskDB, ActionDB
 from taxometr.server.routes import logger_required
 
 
@@ -22,7 +22,7 @@ def new_task_action(logger: logging.Logger, task_id: int):
     logger.error('action name invalid: %s', action_name)
     return err.InvalidActionName('action name should be valid printable string')
 
-  action = Action()
+  action = ActionDB()
   action.task = TaskDB.get_task(task_id)
   action.description = action_name
 

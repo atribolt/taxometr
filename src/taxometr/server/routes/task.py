@@ -1,7 +1,7 @@
 import logging
 import flask
 import taxometr.server.errors as err
-from taxometr.database import TaskDB, Task
+from taxometr.database import TaskDB
 from taxometr.server.routes import logger_required
 
 
@@ -29,7 +29,7 @@ def get_task_list():
 def new_task(logger: logging.Logger):
   props: dict = flask.request.json
 
-  task = Task()
+  task = TaskDB()
   task.title = props.get('title', '')
 
   if not task.title:
@@ -41,7 +41,10 @@ def new_task(logger: logging.Logger):
   task = TaskDB.new(task)
 
   logger.debug('task created: %i - %s', task.id, task.title)
-  return task.id, 201
+  return {
+    'id': task.id,
+    'title': task.title
+  }, 201
 
 
 @logger_required
@@ -52,14 +55,14 @@ def update_task(logger: logging.Logger, task_id: int):
 
   params: dict = flask.request.json
 
-  task = Task()
+  task = TaskDB()
   task.id = task_id
   task.title = params.get('title')
 
   TaskDB.update_task(task)
   return {
-    task.id,
-    task.title
+    'id': task.id,
+    'title': task.title
   }
 
 
