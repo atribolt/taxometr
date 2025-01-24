@@ -40,7 +40,6 @@ class Column(str, Enum):
   ActionId = 'action_id'
   ActionName = 'action_name'
   Time = 'time'
-  State = 'state'
   ActionTimeRanges = 'action_time_ranges'
   TimeHours = 'time_hours'
 
