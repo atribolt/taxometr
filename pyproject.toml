@@ -20,7 +20,7 @@ dependencies = [
 
 
 [project.optional-dependencies]
-cli = ["click", "tabulate"]
+cli = ["click", "tabulate", "requests"]
 
 
 [project.scripts]
