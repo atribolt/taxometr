@@ -58,17 +58,8 @@ def create_app():
   request_started.connect(bind_database, server)
   request_finished.connect(close_database, server)
 
-  server.get('/task')(task.get_task_list)
-  server.put('/task')(task.new_task)
-  server.post('/task/<int:task_id>')(task.update_task)
-  server.delete('/task/<int:task_id>')(task.delete_task)
-
-  server.put('/task/<int:task_id>/action')(actions.new_task_action)
-  server.get('/task/<int:task_id>/action')(actions.get_task_actions)
-  # server.delete('/action/<int:action_id>')(actions.delete_action)
-  # server.post('/action/<int:action_id>')(actions.update_action)
-  server.get('/timings/report')(reports.get_timing_report)
-
+  server.register_blueprint(task.task_handler)
   server.register_blueprint(actions.actions_handler)
+  server.register_blueprint(reports.report_handler)
 
   return server

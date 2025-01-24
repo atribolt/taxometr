@@ -1,70 +1,11 @@
-import logging
-import json
 import flask
-import taxometr.server.errors as err
-from taxometr.database import (
-  TaskDB,
-  ActionDB,
-  TimeRangeDB
-)
-from taxometr.server.routes import logger_required
-from pydantic import BaseModel, Field, AfterValidator
-from typing_extensions import Annotated
-from typing import Optional, TypeAlias, Iterable
-from dataclasses import dataclass, asdict, Field as DataClassField
-from datetime import datetime, timezone as tz, timedelta
-from enum import Enum
+from taxometr.database import ActionDB, TimeRangeDB
+from typing import Iterable
+from dataclasses import dataclass, asdict
+from datetime import datetime, timezone as tz
 from itertools import groupby
-
-
-def add_timezone(value: datetime):
-  if value.tzinfo is None:
-    return value.replace(tzinfo=tz.utc)
-  return value
-
-
-def time_start_current_day_utc():
-  return datetime.now(tz=tz.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-
-
-def time_start_tomorrow_day_utc():
-  return time_start_current_day_utc() + timedelta(days=1)
-
-
-TimeWithTimezone: TypeAlias = Annotated[datetime, AfterValidator(add_timezone)]
-
-
-class Column(str, Enum):
-  TaskId = 'task_id'
-  TaskName = 'task_name'
-  ActionId = 'action_id'
-  ActionName = 'action_name'
-  Time = 'time'
-  State = 'state'
-  ActionTimeRanges = 'action_time_ranges'
-  TimeHours = 'time_hours'
-
-
-class SortingColumns(str, Enum):
-  TaskId = 'task_id'
-  TaskName = 'task_name'
-  ActionId = 'action_id'
-  ActionName = 'action_name'
-  Time = 'time'
-  TimeHours = 'time_hours'
-
-
-class SortOrder(str, Enum):
-  ask = 'ask'
-  desk = 'desk'
-
-
-class FilterSchema(BaseModel):
-  class TimeRangeFilter(BaseModel):
-    since: TimeWithTimezone = Field(default_factory=time_start_current_day_utc)
-    until: TimeWithTimezone = Field(default_factory=time_start_tomorrow_day_utc)
-
-  time_range: Optional[TimeRangeFilter] = TimeRangeFilter()
+from taxometr.server.routes import JsonQueryField
+from taxometr.server.schemas import ReportTimingsFilterSchema
 
 
 @dataclass
@@ -83,12 +24,13 @@ class ReportRecord:
   action_time_ranges: list[TimeRange] | None = None
 
 
-@logger_required
-def get_timing_report(logger: logging.Logger):
-  filters_object = json.loads(flask.request.args.get('filter', '{}'))
-  filters = FilterSchema.model_validate(filters_object)
+report_handler = flask.Blueprint('reports', __name__, '/report')
 
-  logging.debug('filters: %s', filters)
+
+@report_handler.get('/timings')
+@JsonQueryField('filter', ReportTimingsFilterSchema)
+def get_timing_report(filters: ReportTimingsFilterSchema):
+  logger = flask.current_app.logger
 
   query = TimeRangeDB.select().where(
     (TimeRangeDB.end_utc >= filters.time_range.since) &

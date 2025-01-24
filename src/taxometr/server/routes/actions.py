@@ -1,77 +1,46 @@
 import copy
-import logging
 import flask
 import taxometr.server.errors as err
 from taxometr.database import TaskDB, ActionDB
-from taxometr.server.routes import logger_required
+from functools import wraps
+from taxometr.server.routes import JsonRequest
+from taxometr.server.schemas import ActionParamsSchema
 
 
 actions_handler = flask.Blueprint('actions', __name__, url_prefix='/action')
 
 
-# @actions_handler.put('/<int:task_id>')
+def action_required(func):
+  @wraps(func)
+  def wrapper(action_id: int, *args, **kwargs):
+    logger = flask.current_app.logger
+    if not action_id or action_id < 0:
+      logger.error('invalid action ID "%i"', action_id)
+      return err.InvalidIdentifier('Required valid action identifier')
+    action = ActionDB.get_action(action_id)
+    return func(action, *args, **kwargs)
+  return wrapper
 
 
-
-@logger_required
-def get_task_actions(logger: logging.Logger, task_id: int):
-  if not task_id or task_id < 0:
-    logger.error('invalid task ID "%i"', task_id)
-    return err.InvalidIdentifier('Action required valid task identifier')
-
-  task = TaskDB.get_task(task_id)
-
-  filters = flask.request.args.get('filter', {})
-  action_name = filters.get('name', None)
-
-  if action_name is not None:
-    if not isinstance(action_name, str) or not action_name.isprintable():
-      logger.error('action name in filter invalid: %s', action_name)
-      return err.InvalidActionName('action name should be valid string')
-
-  return [
-    {
-      'id': action.id,
-      'taskId': action.task.id,
-      'name': action.description
-    }
-    for action in ActionDB.get_actions_by_task(task, action_name)
-  ]
-
-
-@logger_required
-def delete_action(logger: logging.Logger, action_id: int):
-  if not action_id or action_id < 0:
-    logger.error('invalid action ID "%i"', action_id)
-    return err.InvalidIdentifier('Action required valid identifier')
-
-  action = ActionDB.get_action(action_id)
+@actions_handler.delete('/<int:action_id>')
+@action_required
+def delete_action(action: ActionDB):
   ActionDB.delete_action(action)
+  flask.current_app.logger.info('%s deleted', action)
 
-  logger.info('%s deleted', action)
 
-
-@logger_required
-def update_action(logger: logging.Logger, action_id: int):
-  if not action_id or action_id < 0:
-    logger.error('invalid action ID "%i"', action_id)
-    return err.InvalidIdentifier('Action required valid identifier')
-
-  action = ActionDB.get_action(action_id)
-
-  params: dict = flask.request.json
-  action_name = params.get('name')
-
-  if action.description != action_name:
-    update = copy.copy(action)
-    update.description = action_name
-
-    ActionDB.update_action(update)
-    logger.info('updated: %s -> %s', action, update)
+@actions_handler.post('/<int:action_id>')
+@action_required
+@JsonRequest(ActionParamsSchema)
+def update_action(action_params: ActionParamsSchema, action: ActionDB):
+  if action_params.name != action.description:
+    oldname = action.description
+    action.description = action_params.name
+    ActionDB.update_action(action)
+    flask.current_app.logger.info('action name changed: %s -> %s', oldname, action.description)
 
   return {
     'id': action.id,
     'taskId': action.task.id,
     'name': action.description
   }
-

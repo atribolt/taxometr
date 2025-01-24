@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Type
+import taxometr.server.errors as err
 import functools
 import flask
 
@@ -27,8 +28,11 @@ class JsonQueryField:
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
       json_body = flask.request.args.get(self.field, None)
-      if self.required and json_body is None:
-        raise
+      if self.required:
+        if json_body is None:
+          return err.InvalidQueryItem('%s required, but not present' % self.field)
+      else:
+        json_body = {}
 
       obj = self.schema.model_validate(json_body)
       return func(obj, *args, **kwargs)

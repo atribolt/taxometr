@@ -1,21 +1,28 @@
-import logging
 import flask
 import taxometr.server.errors as err
-from taxometr.database import TaskDB
-from taxometr.server.routes import JsonRequest
-from pydantic import BaseModel, Field
-from taxometr.common.validations import PrintableString
-
-
-class TaskParamsSchema(BaseModel):
-  title: PrintableString = Field(max_length=1000)
+from taxometr.database import TaskDB, ActionDB
+from taxometr.server.routes import JsonRequest, JsonQueryField
+from taxometr.server.schemas import TaskParamsSchema, ActionParamsSchema, ActionFilterSchema
+from functools import wraps
 
 
 task_handler = flask.Blueprint('tasks', __name__, url_prefix='/task')
 
 
-@task_handler.get('/')
-def get_task_list():
+def task_required(func):
+  @wraps(func)
+  def wrapper(task_id: int, *args, **kwargs):
+    logger = flask.current_app.logger
+    if not task_id or task_id < 0:
+      logger.error('invalid task ID "%i"', task_id)
+      return err.InvalidIdentifier('Required valid task identifier')
+    task = TaskDB.get_task(task_id)
+    return func(task, *args, **kwargs)
+  return wrapper
+
+
+@task_handler.get('')
+def get_task_list() -> list:
   filters = flask.request.args.get('filter', {})
 
   title = filters.get('title', None)
@@ -35,7 +42,7 @@ def get_task_list():
   ]
 
 
-@task_handler.put('/')
+@task_handler.put('')
 @JsonRequest(TaskParamsSchema)
 def new_task(task_params: TaskParamsSchema):
   logger = flask.current_app.logger
@@ -48,48 +55,38 @@ def new_task(task_params: TaskParamsSchema):
 
 
 @task_handler.post('/<int:task_id>')
+@task_required
 @JsonRequest(TaskParamsSchema)
-def update_task(task_params: TaskParamsSchema, task_id: int):
-  task = TaskDB()
-  task.id = task_id
-  task.title = task_params.title
-  TaskDB.update_task(task)
+def update_task(task_params: TaskParamsSchema, task: TaskDB):
+  if task_params.title != task.title:
+    old_title = task.title
+    task.title = task_params.title
+    TaskDB.update_task(task)
+    flask.current_app.logger.info('task title update "%s" -> "%s"', old_title, task.title)
+
   return {
     'id': task.id,
     'title': task.title
   }
 
 
-@logger_required
-def delete_task(logger: logging.Logger, task_id: int):
-  if not task_id or task_id < 0:
-    logger.error('invalid task ID "%i"', task_id)
-    return err.InvalidIdentifier('Required valid task identifier')
-
-  task = TaskDB.get_task(task_id)
+@task_handler.delete('/<int:task_id>')
+@task_required
+def delete_task(task: TaskDB):
+  logger = flask.current_app.logger
   TaskDB.delete_task(task)
-
   logger.info('%s deleted', task)
 
 
-def new_task_action(logger: logging.Logger, task_id: int):
-  if not task_id or task_id < 0:
-    logger.error('invalid task ID "%i"', task_id)
-    return err.InvalidIdentifier('Action required valid task identifier')
-
-  params: dict = flask.request.json
-  action_name = params.get('name', None)
-
-  if action_name is None:
-    logger.error('action name is not present')
-    return err.InvalidActionName('action name required')
-  elif not isinstance(action_name, str) or not action_name or not action_name.isprintable():
-    logger.error('action name invalid: %s', action_name)
-    return err.InvalidActionName('action name should be valid printable string')
+@task_handler.put('/<int:task_id>/action')
+@task_required
+@JsonRequest(ActionParamsSchema)
+def new_task_action(action_params: ActionParamsSchema, task: TaskDB):
+  logger = flask.current_app.logger
 
   action = ActionDB()
-  action.task = TaskDB.get_task(task_id)
-  action.description = action_name
+  action.task = task
+  action.description = action_params.name
 
   action = ActionDB.new(action)
   logger.info('action created: %s', action)
@@ -98,3 +95,17 @@ def new_task_action(logger: logging.Logger, task_id: int):
     'taskId': action.task.id,
     'name': action.description
   }
+
+
+@task_handler.get('/<int:task_id>/action')
+@task_required
+@JsonQueryField('filter', ActionFilterSchema)
+def get_task_actions(filters: ActionFilterSchema, task: TaskDB):
+  return [
+    {
+      'id': action.id,
+      'taskId': action.task.id,
+      'name': action.description
+    }
+    for action in ActionDB.get_actions_by_task(task, filters.name)
+  ]

@@ -4,7 +4,7 @@ info:
   version: '0.1.0'
 
 servers:
-  - url: 'http://localhost:2710/'
+  - url: 'http://localhost:5000/'
 
 paths:
   /task:
@@ -147,10 +147,10 @@ paths:
     get:
       tags:
         - task
-        - action
         - get
       summary: 'Получить список пунктов задачи'
       parameters:
+        - $ref: '#/components/parameters/path_identifier'
         - name: 'filter'
           description: 'Фильтры поиска'
           in: query
@@ -185,8 +185,9 @@ paths:
     put:
       tags:
         - task
-        - action
         - create
+      parameters:
+        - $ref: '#/components/parameters/path_identifier'
       summary: 'Добавить пункт'
       requestBody:
         content:
@@ -222,6 +223,8 @@ paths:
         - action
         - change
       summary: 'Обновить пункт'
+      parameters:
+        - $ref: '#/components/parameters/path_identifier'
       requestBody:
         content:
           application/json:
@@ -279,7 +282,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/error'
 
-  /timings/report:
+  /report/timings:
     get:
       tags:
         - get

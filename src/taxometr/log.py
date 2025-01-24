@@ -30,7 +30,7 @@ def init_debug_logging():
         'level': 'DEBUG',
         'handlers': ['console']
       },
-      'disable_existing_loggers': False
+      'disable_existing_loggers': True
     })
 
 
