@@ -1,9 +1,10 @@
+import os
 import sys
 import json
 import logging
 from pathlib import Path
-from taxometr.dao.configure import (
-  DaoConfigure, load as dao_configure
+from taxometr.database.configure import (
+  DatabaseConfig, load as database_configure
 )
 from taxometr.timings.configure import (
   RoundingConfig, load as rounding_configure
@@ -11,7 +12,7 @@ from taxometr.timings.configure import (
 
 
 CONFIG_SECTIONS = {
-  'data': (DaoConfigure, dao_configure),
+  'database': (DatabaseConfig, database_configure),
   'rounding': (RoundingConfig, rounding_configure)
 }
 
@@ -19,14 +20,24 @@ CONFIG_SECTIONS = {
 def load_from_json(data: dict):
   log = logging.getLogger('configure')
 
-  for section, (validator, confugrator) in CONFIG_SECTIONS.items():
+  for section, (validator, configurator) in CONFIG_SECTIONS.items():
     log.debug('check config object "%s"', section)
+
+    model = None
+
     if section not in data:
       log.warning('section "%s" not present in config, load as default', section)
-      confugrator(validator())
+      model = validator()
     else:
       log.debug('loading config object "%s"', section)
-      confugrator(validator.model_validate(data[section]))
+      model = validator.model_validate(data[section])
+
+    if callable(configurator):
+      configurator(model)
+
+  if os.environ.get('TAXOMETR_DEBUG_LOGGING'):
+    from taxometr.log import init_debug_logging
+    init_debug_logging()
 
   log.info('config loaded')
 

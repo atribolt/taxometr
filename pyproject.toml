@@ -14,7 +14,8 @@ readme = "README.md"
 license = { file = 'LICENSE' }
 dependencies = [
     "peewee~=3.17",
-    "pydantic~=2.9"
+    "pydantic~=2.9",
+    "flask~=3.1.0"
 ]
 
 

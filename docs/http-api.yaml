@@ -1,0 +1,511 @@
+openapi: '3.0.0'
+info:
+  title: 'Taxometr'
+  version: '0.1.0'
+
+servers:
+  - url: 'http://localhost:5000/'
+
+paths:
+  /task:
+    get:
+      tags:
+        - task
+        - get
+      summary: 'Получить список задач'
+      parameters:
+        - name: 'filter'
+          description: 'Фильтры поиска'
+          in: query
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                description: 'Шаблон названия задачи'
+                example: 'сервис'
+        - name: count
+          description: 'Ограничить кол-во задач'
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1000
+        - name: offset
+          description: 'Пропустить первые offset задач'
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/task'
+    put:
+      tags:
+        - task
+        - create
+      summary: 'Создать задачу'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'Название задачи'
+                  example: 'Запуск человека на луну'
+      responses:
+        201:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/task'
+        400:
+          description: 'Некорректный запрос'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /task/{id}:
+    post:
+      tags:
+        - task
+        - change
+      summary: 'Обновить задачу'
+      parameters:
+        - $ref: '#/components/parameters/path_identifier'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'Новое название для задачи'
+                  example: 'Миссия АППОЛОН'
+      responses:
+        200:
+          description: 'Задача обновлена'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/task'
+        400:
+          description: 'Некорректный запрос'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        404:
+          description: 'Задача не найдена'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        5XX:
+          description: 'Внутренняя ошибка'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+    delete:
+      tags:
+        - task
+        - delete
+      summary: 'Удалить задачу'
+      parameters:
+        - $ref: '#/components/parameters/path_identifier'
+      responses:
+        200:
+          description: 'Задача удалена'
+        404:
+          description: 'Задача не найдена'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        5XX:
+          description: 'Внутренняя ошибка'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /task/{id}/action:
+    get:
+      tags:
+        - task
+        - get
+      summary: 'Получить список пунктов задачи'
+      parameters:
+        - $ref: '#/components/parameters/path_identifier'
+        - name: 'filter'
+          description: 'Фильтры поиска'
+          in: query
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: 'Шаблон названия пункта'
+                example: 'посадка'
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/action_info'
+        404:
+          description: 'Задача не найдена'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        5XX:
+          description: 'Внутренняя ошибка'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+    put:
+      tags:
+        - task
+        - create
+      parameters:
+        - $ref: '#/components/parameters/path_identifier'
+      summary: 'Добавить пункт'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: '#/components/schemas/action_info/properties/name'
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/action_info'
+        404:
+          description: 'Задача не найдена'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        5XX:
+          description: 'Внутренняя ошибка'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /action/{id}:
+    post:
+      tags:
+        - action
+        - change
+      summary: 'Обновить пункт'
+      parameters:
+        - $ref: '#/components/parameters/path_identifier'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: 'Обновления задачи'
+              properties:
+                name:
+                  $ref: '#/components/schemas/action_info/properties/name'
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/action_info'
+        400:
+          description: 'Некорректный запрос'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        404:
+          description: 'Пункт не найден'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        5XX:
+          description: 'Внутренняя ошибка'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+    delete:
+      tags:
+        - action
+        - delete
+      summary: 'Удалить пункт'
+      parameters:
+        - $ref: '#/components/parameters/path_identifier'
+      responses:
+        200:
+          description: 'Пункт удален'
+        404:
+          description: 'Пункт не найден'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        5XX:
+          description: 'Внутренняя ошибка'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /action/{id}/start:
+    post:
+      tags:
+        - action
+      summary: 'Начать выполнение пункта. При этом активный пункт будет остановлен'
+      parameters:
+        - $ref: '#/components/parameters/path_identifier'
+      responses:
+        200:
+          description: Ok
+        400:
+          description: 'Некорректный запрос'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        404:
+          description: 'Пункт не найден'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        5XX:
+          description: 'Внутренняя ошибка'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /action/stop:
+    post:
+      tags:
+        - action
+      summary: 'Остановить активный пункт. Если нет активной задачи, вернуть 404'
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: 'Имя остановленной задачи'
+                  id:
+                    type: integer
+                    description: 'ID остановленной задачи'
+        404:
+          description: Нет активных задач
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /report/timings:
+    get:
+      tags:
+        - get
+        - report
+      summary: 'Сформировать отчет по задачам и пунктам'
+      parameters:
+        - name: 'filter'
+          in: query
+          description: 'Фильтрация задач и пунктов для отчета'
+          schema:
+            type: object
+            properties:
+              time_range:
+                $ref: '#/components/schemas/time_range'
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  time_range:
+                    $ref: '#/components/schemas/time_range'
+                  actions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/report_record'
+        400:
+          description: 'Некорректный запрос'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        5XX:
+          description: 'Внутренняя ошибка'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+components:
+  parameters:
+    path_identifier:
+      name: 'id'
+      required: true
+      in: path
+      schema:
+        type: integer
+        minimum: 0
+        example: 0
+
+  schemas:
+    datetime_field:
+      type: string
+      description: 'Время'
+      format: date-time
+
+    optional_datetime_field:
+      type: string
+      description: "Время, которое может быть неопределено"
+      nullable: true
+      format: date-time
+
+    task:
+      type: object
+      description: 'Информация о задаче'
+      properties:
+        id:
+          type: integer
+          description: 'ID задачи'
+          minimum: 0
+        title:
+          type: string
+          description: 'Название задачи'
+          example: 'Разработка сервиса охреневания'
+
+    time_range:
+      type: object
+      description: 'Диапазон времени'
+      properties:
+        since:
+          $ref: '#/components/schemas/datetime_field'
+        until:
+          $ref: '#/components/schemas/datetime_field'
+
+    timedelta:
+      type: object
+      description: 'Кол-во времени'
+      properties:
+        seconds:
+          type: integer
+          minimum: 0
+          maximum: 59
+        minutes:
+          type: integer
+          minimum: 0
+          maximum: 59
+        hours:
+          type: integer
+          minimum: 0
+          maximum: 23
+
+    action_info:
+      type: object
+      description: 'Информация о пункте задачи'
+      properties:
+        id:
+          type: integer
+          description: 'ID пункта'
+          minimum: 0
+        task_id:
+          type: integer
+          description: 'ID задачи'
+          minimum: 0
+        name:
+          type: string
+          description: 'Название пункта'
+          example: 'Сборка шаттла'
+
+    report_data:
+      type: string
+      description: 'Данные для отправки в отчете'
+      enum:
+        - task_id
+        - task_name
+        - action_id
+        - action_name
+        - time_seconds        # Затраченное время в обычном формате (2ч 30м)
+        - action_time_ranges  # Временные интервалы
+        - time_hours          # Затраченное время в часах (2ч 30м -> 2.5)
+
+    error:
+      type: object
+      description: "Описание ошибки"
+      properties:
+        code:
+          type: integer
+          description: "Код ошибки (возможно они будут)"
+          example: 0xEBA
+        message:
+          type: string
+          description: "Описание ошибки"
+          example: "Произошла неведомая дичь"
+
+    report_record:
+      type: object
+      description: "Строка отчета"
+      properties:
+        task_id:
+          type: integer
+        task_name:
+          type: string
+        action_id:
+          type: integer
+        action_name:
+          type: string
+        time_seconds:
+          type: integer
+          description: Время затраченное на пункт за период указанный в фильтре в секундах
+          example: 3600
+        action_time_ranges:
+          type: array
+          description: "Временные интервалы задачи"
+          items:
+            type: object
+            properties:
+              start:
+                $ref: "#/components/schemas/datetime_field"
+              end:
+                $ref: "#/components/schemas/optional_datetime_field"

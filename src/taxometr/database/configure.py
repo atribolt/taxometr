@@ -23,7 +23,7 @@ class DatabaseConfig(BaseModel):
 def create_tables():
   log = logging.getLogger('configure.database')
   count = 0
-  from taxometr.dao.database import TABLES
+  from taxometr.database import TABLES
 
   db: Database = DatabaseType(*ConnectionArgs, **ConnectionKwargs)
   with db.bind_ctx(TABLES):
@@ -55,7 +55,7 @@ def load(config: DatabaseConfig):
   types[config.type](config)
   create_tables()
 
-  from taxometr.dao.database import TABLES
+  from taxometr.database import TABLES
   GlobalConnection = DatabaseType(ConnectionArgs)
   GlobalConnection.bind(TABLES)
 

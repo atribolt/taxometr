@@ -6,7 +6,7 @@ from taxometr.cli.commands import (
   task_group,
   action_group
 )
-from taxometr.dao.database import get_connection, TABLES
+from taxometr.database import get_connection, TABLES
 
 
 ReadableFile = click.Path(exists=True, readable=True, dir_okay=False, path_type=Path)
