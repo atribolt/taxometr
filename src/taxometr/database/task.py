@@ -14,16 +14,13 @@ class TaskDB(Model):
     return 'Task({}, {})'.format(self.id, self.title)
 
   @staticmethod
-  def new(task: 'TaskDB') -> 'TaskDB':
+  def new(task_title: str) -> 'TaskDB':
     result, created = TaskDB.get_or_create(
-      title=task.title
+      title=task_title
     )
-
     if not created:
       raise ValueError('task same properties is exists')
-
-    task.id = result.id
-    return task
+    return result
 
   @staticmethod
   def get_task(task_id: int) -> 'TaskDB':

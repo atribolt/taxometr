@@ -316,6 +316,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/error'
 
+  # TODO добавить запросы на запуск и остановку задач
+
 components:
   parameters:
     path_identifier:

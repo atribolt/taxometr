@@ -6,33 +6,11 @@ from taxometr.database import TaskDB, ActionDB
 from taxometr.server.routes import logger_required
 
 
-@logger_required
-def new_task_action(logger: logging.Logger, task_id: int):
-  if not task_id or task_id < 0:
-    logger.error('invalid task ID "%i"', task_id)
-    return err.InvalidIdentifier('Action required valid task identifier')
+actions_handler = flask.Blueprint('actions', __name__, url_prefix='/action')
 
-  params: dict = flask.request.json
-  action_name = params.get('name', None)
 
-  if action_name is None:
-    logger.error('action name is not present')
-    return err.InvalidActionName('action name required')
-  elif not isinstance(action_name, str) or not action_name or not action_name.isprintable():
-    logger.error('action name invalid: %s', action_name)
-    return err.InvalidActionName('action name should be valid printable string')
+# @actions_handler.put('/<int:task_id>')
 
-  action = ActionDB()
-  action.task = TaskDB.get_task(task_id)
-  action.description = action_name
-
-  action = ActionDB.new(action)
-  logger.info('action created: %s', action)
-  return {
-    'id': action.id,
-    'taskId': action.task.id,
-    'name': action.description
-  }
 
 
 @logger_required

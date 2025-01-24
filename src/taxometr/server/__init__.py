@@ -65,8 +65,10 @@ def create_app():
 
   server.put('/task/<int:task_id>/action')(actions.new_task_action)
   server.get('/task/<int:task_id>/action')(actions.get_task_actions)
-  server.delete('/action/<int:action_id>')(actions.delete_action)
-  server.post('/action/<int:action_id>')(actions.update_action)
+  # server.delete('/action/<int:action_id>')(actions.delete_action)
+  # server.post('/action/<int:action_id>')(actions.update_action)
   server.get('/timings/report')(reports.get_timing_report)
+
+  server.register_blueprint(actions.actions_handler)
 
   return server
