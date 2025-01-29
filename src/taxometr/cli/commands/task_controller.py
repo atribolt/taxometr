@@ -12,7 +12,7 @@ class TaskModel(BaseModel):
   title: PrintableString
 
 
-@click.group
+@click.group()
 def task_group():
   """Task group managing"""
 

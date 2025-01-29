@@ -1,11 +1,8 @@
 import click
 import time
 from functools import partial
-from taxometr.cli.commands import Date
 from datetime import datetime, timedelta, timezone as tz
 from taxometr.cli.printing import Table, echo
-from taxometr.dao.factory import DaoFactory
-from taxometr.dao import Action, Task
 
 
 TIME_GROUP = click.Choice(['today', 'month', 'all'], case_sensitive=False)
@@ -17,12 +14,7 @@ def get_midnight_time() -> datetime:
   return dt.replace(tzinfo=tz.utc)
 
 
-@click.group
-def action_group():
-  """Actions managing"""
-
-
-@action_group.command('list')
+@click.command('list')
 @click.option('-a', '--all', 'show_all', is_flag=True, default=False, help='Show all actions')
 @click.option('-s', '--since', type=Date, help='Show actions after')
 @click.option('-u', '--until', type=Date, help='Show actions before')
@@ -66,7 +58,7 @@ def action_list(show_all, since, until, time_range):
   echo(str(table))
 
 
-@action_group.command('show')
+@click.command('show')
 @click.option('-s', '--show-ranges', type=TIME_GROUP, help='Show time range for the period', default='all')
 @click.argument('action-id')
 def action_show(show_ranges, action_id):
@@ -111,7 +103,7 @@ def action_show(show_ranges, action_id):
         time_range.begin.strftime(date_fmt), time_range.end.strftime(date_fmt) if time_range.end else '...')
 
 
-@action_group.command('new')
+@click.command('new')
 @click.option('-s', '--start', is_flag=True, default=False, help='Запустить эту задачу')
 @click.option('-t', '--task', 'task_id', type=int, help='ID задачи')
 @click.argument('name')
@@ -133,7 +125,7 @@ def action_new(start, task_id, name):
   echo('{}: ({}) {}', action.id, action.task.title, action.description)
 
 
-@action_group.command('start')
+@click.command('start')
 @click.argument('action-id', type=int)
 def action_start(action_id):
   """Start action"""
@@ -142,6 +134,6 @@ def action_start(action_id):
   action_dao.start_action(action_id)
 
 
-@action_group.command('stop')
+@click.command('stop')
 def action_stop():
   DaoFactory().get_action_dao().stop_all_actions()
