@@ -1,14 +1,18 @@
 import click
 from pathlib import Path
+from click import DateTime
 
 
 class CliConfig:
-  ssl_cert = Path('~/.config/taxometr/server.crt').expanduser()
-
-  if ssl_cert.exists():
-    taxometr_server = 'https://localhost:8273'
-  else:
-    taxometr_server = 'https://localhost:8270'
+  taxometr_server: str = None
 
 
 ReadableFile = click.Path(exists=True, readable=True, dir_okay=False, path_type=Path)
+Date = DateTime(formats=['%Y-%m-%d', '%H:%M:%S', '%Y-%m-%d %H:%M:%S'])
+
+
+context = click.make_pass_decorator(CliConfig, True)
+
+
+class Error(click.UsageError):
+  

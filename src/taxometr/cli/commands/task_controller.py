@@ -1,21 +1,36 @@
 import click
-from taxometr.dao import Task
+import requests as req
+from urllib.parse import urljoin
 from taxometr.cli.printing import echo, Table
-from taxometr.dao.factory import DaoFactory
+from taxometr.cli import context, CliConfig
+from pydantic import BaseModel, NonNegativeInt
+from taxometr.common.validations import PrintableString
 
 
-@click.group()
+class TaskModel(BaseModel):
+  id: NonNegativeInt
+  title: PrintableString
+
+
+@click.group
 def task_group():
   """Task group managing"""
 
 
 @task_group.command('new')
 @click.argument('task-name', type=str)
-def task_new(task_name):
+@context
+def task_new(ctx: CliConfig, task_name):
   """Create new task"""
-  task = Task()
-  task.title = task_name
-  task = DaoFactory().get_task_dao().new(task)
+  url = urljoin(ctx.taxometr_server, '/task')
+
+  reply = req.put(url, json={
+    'title': task_name
+  })
+
+  if reply.status_code != 201:
+    click.get_current_context().fail("Task wasn't created: %s")
+
   echo('{}: {}', task.id, task.title)
 
 

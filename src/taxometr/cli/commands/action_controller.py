@@ -17,7 +17,7 @@ def get_midnight_time() -> datetime:
   return dt.replace(tzinfo=tz.utc)
 
 
-@click.group()
+@click.group
 def action_group():
   """Actions managing"""
 
