@@ -1,6 +1,8 @@
 import os
+from pathlib import Path
+from importlib.resources import files
 from flask import Flask, request_started, request, request_finished, g
-from taxometr.server.routes import task, actions, reports
+from taxometr.server.routes import api
 
 
 def put_trace_hash(*_, **__):
@@ -34,8 +36,8 @@ def close_database(sender, **__):
 
 def create_app():
   server = Flask('taxometr',
-                 static_url_path='/',
-                 static_folder='public')
+                 static_folder=None,    # external proxy is control this
+                 template_folder=None)
 
   log = server.logger
 
@@ -45,8 +47,6 @@ def create_app():
       log.debug('load config: %s', config)
 
       import taxometr.configure as cfg
-      from pathlib import Path
-
       cfg.load_from_file(Path(config))
     else:
       log.warning('config %s is not exists', config)
@@ -58,8 +58,5 @@ def create_app():
   request_started.connect(bind_database, server)
   request_finished.connect(close_database, server)
 
-  server.register_blueprint(task.task_handler)
-  server.register_blueprint(actions.actions_handler)
-  server.register_blueprint(reports.report_handler)
-
+  server.register_blueprint(api.v1)
   return server
