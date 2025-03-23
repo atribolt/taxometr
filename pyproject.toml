@@ -13,14 +13,9 @@ requires-python = "~=3.10"
 readme = "README.md"
 license = { file = 'LICENSE' }
 dependencies = [
-    "peewee~=3.17",
-    "pydantic~=2.9"
+    "peewee~=3.17.9"
 ]
 
-
 [project.optional-dependencies]
-cli = ["click", "tabulate"]
-
-
-[project.scripts]
-taxometr = "taxometr.cli:cli"
+postgres = ['psycopg2-binary']
+def = ['nuitka', 'ruff']
