@@ -18,4 +18,5 @@ dependencies = [
 
 [project.optional-dependencies]
 postgres = ['psycopg2-binary']
-def = ['nuitka', 'ruff']
+dev = ['nuitka', 'ruff']
+test = ['pytest']

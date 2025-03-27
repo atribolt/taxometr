@@ -24,7 +24,7 @@ SCHEMA = [
     'title': 'task 3',
     'labels': ['test 3'], 
     'start': datetime.now(tz=timezone.utc),
-    'finish': datetime.now(tz=timezone.utc) + timedelta(days=1)
+    'finish': None
   }
 ]
 
